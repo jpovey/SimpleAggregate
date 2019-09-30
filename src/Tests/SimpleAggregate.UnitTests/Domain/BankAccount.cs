@@ -22,6 +22,11 @@
             this.Apply(new AccountCredited { Amount = amount });
         }
 
+        public void DoNothing()
+        {
+
+        }
+
         private static Task CallDummyApi()
         {
             return Task.CompletedTask;

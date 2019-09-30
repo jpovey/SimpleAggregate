@@ -4,7 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
-    public class Aggregate
+    public class Aggregate : IAggregate
     {
         public ReadOnlyCollection<object> UncommittedEvents => _uncommittedEvents.AsReadOnly();
         public string AggregateId { get; }
