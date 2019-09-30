@@ -4,18 +4,13 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public interface IAggregateProcessor
-    {
-        Task Process<T>(T aggregate, Action<T> action) where T : IAggregate;
-    }
-
     public class AggregateProcessor : IAggregateProcessor
     {
-        private readonly IEventRepository _eventRepository;
+        private readonly IEventStore _eventStore;
 
-        public AggregateProcessor(IEventRepository eventRepository)
+        public AggregateProcessor(IEventStore eventStore)
         {
-            _eventRepository = eventRepository;
+            _eventStore = eventStore;
         }
 
         public async Task Process<T>(T aggregate, Action<T> action) where T : IAggregate
@@ -27,7 +22,7 @@
 
         private async Task Load<T>(T aggregate) where T : IAggregate
         {
-            var events = await _eventRepository.LoadEvents(aggregate.AggregateId);
+            var events = await _eventStore.LoadEvents(aggregate.AggregateId);
             if (events != null)
             {
                 aggregate.Rehydrate(events);
@@ -38,7 +33,7 @@
         {
             if (aggregate.UncommittedEvents.Any())
             {
-                await _eventRepository.SaveEvents(aggregate.AggregateId, aggregate.UncommittedEvents);
+                await _eventStore.SaveEvents(aggregate.AggregateId, aggregate.UncommittedEvents);
             }
         }
     }

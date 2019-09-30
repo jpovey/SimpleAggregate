@@ -7,7 +7,6 @@
     using AutoFixture;
     using Domain;
     using Domain.Events;
-    using Exceptions;
     using FluentAssertions;
     using NUnit.Framework;
 
