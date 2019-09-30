@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleAggregate", "SimpleAggregate\SimpleAggregate.csproj", "{61E97974-2C94-40B5-8E12-33DE27EED714}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{61E97974-2C94-40B5-8E12-33DE27EED714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61E97974-2C94-40B5-8E12-33DE27EED714}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61E97974-2C94-40B5-8E12-33DE27EED714}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61E97974-2C94-40B5-8E12-33DE27EED714}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FE16B1F2-57EB-4D3C-874C-72155C5A862C}
+	EndGlobalSection
+EndGlobal
