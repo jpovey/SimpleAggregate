@@ -2,6 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>SimpleAggregate</PackageId>
+    <Authors>Jonathan Povey</Authors>
+    <Product>SimpleAggregate</Product>
+    <Description>Simple Aggregate. A package to help simplify applying events to a DDD aggregate.</Description>
+    <PackageProjectUrl>https://github.com/jpovey/SimpleAggregate</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jpovey/SimpleAggregate</RepositoryUrl>
+    <PackageTags>SimpleAggregate DDD Aggregate</PackageTags>
   </PropertyGroup>
 
 </Project>
