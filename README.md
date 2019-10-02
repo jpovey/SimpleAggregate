@@ -1,5 +1,3 @@
-[![Build Status](https://jonpovey.visualstudio.com/SimpleAggregate/_apis/build/status/jpovey.SimpleAggregate?branchName=master)](https://jonpovey.visualstudio.com/SimpleAggregate/_build/latest?definitionId=1&branchName=master)
-
 # SimpleAggregate
 A package to help simplify applying events to a DDD aggregate.
 

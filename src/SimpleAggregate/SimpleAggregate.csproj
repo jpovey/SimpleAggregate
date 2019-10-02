@@ -1,18 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Title>SimpleAggregate</Title>
     <PackageId>SimpleAggregate</PackageId>
     <Authors>Jonathan Povey</Authors>
     <Product>SimpleAggregate</Product>
     <Description>Simple Aggregate. A package to help simplify applying events to a DDD aggregate.</Description>
+    <Summary>Simple Aggregate. A package to help simplify applying events to a DDD aggregate.</Summary>
+    <Copyright>Copyright Jonathan Povey ©2019</Copyright>
     <PackageProjectUrl>https://github.com/jpovey/SimpleAggregate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jpovey/SimpleAggregate</RepositoryUrl>
-    <PackageTags>SimpleAggregate DDD Aggregate</PackageTags>
+    <PackageTags>SimpleAggregate DDD Aggregate EventSourcing</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
   </ItemGroup>
-
 </Project>
+
+
+
+
+    
+ 
+    
+    
