@@ -3,7 +3,11 @@
 # SimpleAggregate
 A package to help simplify applying events to a DDD aggregate.
 
-# Aggregate
+## How to use
+
+### Aggregate
+Aggregates are built by creating an instance which inherits from the Aggregate base class. Once created aggregates can be rehydrated by appling events from history or updated by applying new events.
+
 1. Create an aggregate which inherits from `Aggregate`
 2. Set aggregate base properties
 3. Register event handlers
@@ -59,14 +63,14 @@ account.Rehydrate(events);
 account.CreditAccount(100);
 ```
 
-## Settings
+#### Settings
 
 - `IgnoreUnregisteredEvents`: Control if the aggregate must handle all events it tries to apply. 
     - If set to `true` unregistered events will be ignored. 
     - If set to `false` unregistered events will throw an exception.
 
 
-# Aggregate Processor
+### Aggregate Processor
 The aggregate processor allows users to rehydrate, command an action to be performed and commit new events against an aggregate.
 
 The `AggregateProcessor` requires an instance of `IEventStore` which should be used to wrap the event data access implementation.
@@ -92,3 +96,12 @@ public class CreditAccountHandler
 }
 
 ```
+
+## Build and publish
+#### Pipelines
+Build pipelines are managed in Azure Devops
+- [Build and Test](https://jonpovey.visualstudio.com/SimpleAggregate/_build?definitionId=17)
+- [Publish](https://jonpovey.visualstudio.com/SimpleAggregate/_build?definitionId=16)
+
+#### Nuget package
+https://www.nuget.org/packages/SimpleAggregate/
