@@ -21,6 +21,7 @@
         [SetUp]
         public void Setup()
         {
+            Aggregate.Settings.IgnoreUnregisteredEvents = false;
             _accountReference = _fixture.Create<string>();
             _creditAmount = _fixture.Create<decimal>();
             _sut = new BankAccount(_accountReference);
@@ -104,23 +105,10 @@
         }
 
         [Test]
-        public void ThrowException_WhenEventNotRegistered_GivenIgnoreUnregisteredEventsIsFalse()
+        public void NotThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsSettingIsTrue()
         {
-            var events = new List<object>
-            {
-                new UnregisteredEvent()
-            };
+            Aggregate.Settings.IgnoreUnregisteredEvents = true;
 
-            Action act = () => _sut.Rehydrate(events);
-
-            act.Should().Throw<UnregisteredEventException>();
-        }
-
-        [Test]
-        public void NotThrowException_WhenEventNotRegistered_GivenIgnoreUnregisteredEventsIsTrue()
-        {
-            const bool ignoreUnregisteredEvents = true;
-            _sut = new BankAccount(_accountReference, ignoreUnregisteredEvents);
             var events = new List<object>
             {
                 new UnregisteredEvent()
@@ -129,6 +117,21 @@
             Action act = () => _sut.Rehydrate(events);
 
             act.Should().NotThrow<UnregisteredEventException>();
+        }
+
+        [Test]
+        public void ThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsSettingIsFalse()
+        {
+            Aggregate.Settings.IgnoreUnregisteredEvents = false;
+
+            var events = new List<object>
+            {
+                new UnregisteredEvent()
+            };
+
+            Action act = () => _sut.Rehydrate(events);
+
+            act.Should().Throw<UnregisteredEventException>();
         }
 
         [Test]

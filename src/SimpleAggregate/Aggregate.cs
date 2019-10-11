@@ -6,15 +6,14 @@
 
     public class Aggregate : IAggregate
     {
+        public static AggregateSettings Settings { get; } = new AggregateSettings();
         public ReadOnlyCollection<object> UncommittedEvents => _uncommittedEvents.AsReadOnly();
         public string AggregateId { get; }
-        public bool IgnoreUnregisteredEvents { get; }
         private readonly List<object> _uncommittedEvents = new List<object>();
 
-        protected Aggregate(string aggregateId, bool ignoreUnregisteredEvents)
+        protected Aggregate(string aggregateId)
         {
             AggregateId = aggregateId ?? throw new ArgumentNullException(nameof(aggregateId), "AggregateId must not be null");
-            IgnoreUnregisteredEvents = ignoreUnregisteredEvents;
         }
 
         protected void Apply<TEvent>(TEvent @event)
@@ -29,7 +28,7 @@
 
             var handler = this as IHandle<TEvent>;
 
-            if (!IgnoreUnregisteredEvents && handler == null)
+            if (!Settings.IgnoreUnregisteredEvents && handler == null)
                 throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}'");
 
             handler?.Handle(@event);

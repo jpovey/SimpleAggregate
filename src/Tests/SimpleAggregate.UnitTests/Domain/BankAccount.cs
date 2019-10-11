@@ -2,7 +2,7 @@
 {
     using System.Threading.Tasks;
     using Events;
-
+    
     public class BankAccount : Aggregate,
         IHandle<AccountCredited>,
         IHandle<AccountDebited>
@@ -11,8 +11,8 @@
         public string AccountReference => AggregateId;
         public decimal Balance { get; private set; }
 
-        public BankAccount(string bankAccountReference, bool ignoreUnregisteredEvents = false) 
-            : base(bankAccountReference, ignoreUnregisteredEvents)
+        public BankAccount(string bankAccountReference) 
+            : base(bankAccountReference)
         {
         }
 

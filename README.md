@@ -21,8 +21,7 @@ public class BankAccount : Aggregate, //Step 1
     public decimal Balance { get; private set; }
 
     // Step 2
-    public BankAccount(string accountReference, bool ignoreUnregisteredEvents = false) 
-        : base(accountReference, ignoreUnregisteredEvents)
+    public BankAccount(string accountReference) : base(accountReference)
     {
     }
 
@@ -63,12 +62,25 @@ account.Rehydrate(events);
 account.CreditAccount(100);
 ```
 
-#### Settings
+### Aggregate Settings
+Global aggregate configuration is controlled using Aggregate Settings. These settings are best applied in a service setup class or similar.
 
-- `IgnoreUnregisteredEvents`: Control if the aggregate must handle all events it tries to apply. 
-    - If set to `true` unregistered events will be ignored. 
-    - If set to `false` unregistered events will throw an exception.
+**Ignore Unregistered Events**
 
+By default the aggregate will apply **all** events. But, based on the architecture of a system some services may require some events to be ignored. To prevent unregistered events from being applied to the aggregate set `Aggregate.Settings.IgnoreUnregisteredEvents` to `true`.
+
+- If set to `true` unregistered events will be ignored. 
+- If set to `false` or default unregistered events will throw an exception.
+
+```c#
+public class ServiceSetup
+{
+    public void Setup()
+    {
+        Aggregate.Settings.IgnoreUnregisteredEvents = true;
+    }
+}
+```
 
 ### Aggregate Processor
 The aggregate processor allows users to rehydrate, command an action to be performed and commit new events against an aggregate.
