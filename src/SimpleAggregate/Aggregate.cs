@@ -3,13 +3,16 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Linq;
 
     public class Aggregate : IAggregate
     {
         public ReadOnlyCollection<object> UncommittedEvents => _uncommittedEvents.AsReadOnly();
+        public ReadOnlyCollection<object> CommittedEvents => _committedEvents.AsReadOnly();
         public string AggregateId { get; }
         public bool IgnoreUnregisteredEvents { get; protected set; }
         private readonly List<object> _uncommittedEvents = new List<object>();
+        private List<dynamic> _committedEvents = new List<dynamic>();
 
         protected Aggregate(string aggregateId)
         {
@@ -32,11 +35,13 @@
                 throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}'");
 
             handler?.Handle(@event);
+            
         }
 
         public void Rehydrate(IEnumerable<dynamic> events)
         {
-            foreach (var @event in events) ApplyInternal(@event);
+             _committedEvents = events.ToList();
+            foreach (var @event in _committedEvents) ApplyInternal(@event);
         }
 
         public void ClearUncommittedEvents()

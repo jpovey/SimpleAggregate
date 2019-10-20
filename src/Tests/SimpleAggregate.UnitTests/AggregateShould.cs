@@ -173,5 +173,19 @@
             _sut.Balance.Should().Be(60);
             _sut.UncommittedEvents.Count.Should().Be(1);
         }
+
+        [Test]
+        public void StoreCommittedEventsAgainstTheAggregate()
+        {
+            var events = new List<object>
+            {
+                new AccountCredited { Amount = 50 },
+                new AccountDebited { Amount = 10 },
+            };
+
+            _sut.Rehydrate(events);
+
+            _sut.CommittedEvents.Should().BeEquivalentTo(events);
+        }
     }
 }
