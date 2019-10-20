@@ -63,29 +63,25 @@ account.CreditAccount(100);
 ```
 
 ### Aggregate Settings
-Global aggregate configuration is controlled using Aggregate Settings. These settings are best applied in a service setup class or similar.
 
 **Ignore Unregistered Events**
 
-By default the aggregate will apply **all** events. But, based on the architecture of a system some services may require some events to be ignored. To prevent unregistered events from being applied to the aggregate set `Aggregate.Settings.IgnoreUnregisteredEvents` to `true`.
+By default the aggregate requires **all** events to be registered otherwise an exception will be thrown. But, based on the architecture of a system some services may require events to be ignored. To prevent unregistered events from being applied set `IgnoreUnregisteredEvents` to `true` when setting up the aggregate.
 
 - If set to `true` unregistered events will be ignored. 
-- If set to `false` or default unregistered events will throw an exception.
+- If set to `false` or default unregistered events will throw an `UnregisteredEventException`.
 
 ```c#
-public class ServiceSetup
+public BankAccount(string bankAccountReference) : base (bankAccountReference)
 {
-    public void Setup()
-    {
-        Aggregate.Settings.IgnoreUnregisteredEvents = true;
-    }
+    IgnoreUnregisteredEvents = true;
 }
 ```
 
 ### Aggregate Processor
 The aggregate processor allows users to rehydrate, command an action to be performed and commit new events against an aggregate.
 
-The `AggregateProcessor` requires an instance of `IEventStore` which should be used to wrap the event data access implementation.
+The `AggregateProcessor` requires an instance of `IEventStore` which should be used to wrap the event store data access implementation.
 
 This class could be used in a command handler to perform some business logic against an aggregate.
 
@@ -99,10 +95,10 @@ public class CreditAccountHandler
         _processor = processor;
     }
 
-    public Task Handle(DepositFundsCommand command)
+    public Task Handle(CreditAccountCommand command)
     {
         var bankAccount = new BankAccount(command.AccountReference);
-        return _processor.Process(bankAccount, 
+        return _processor.ProcessAsync(bankAccount, 
             account => account.CreditAccount(command.Amount));
     }
 }

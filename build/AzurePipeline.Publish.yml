@@ -13,7 +13,7 @@ variables:
   buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
   Version.Major: '0'
-  Version.Minor: '4'
+  Version.Minor: '7'
   Version.Patch:  $[counter(variables['Version.Minor'], 0)]
   Release.Number: '$(Version.Major).$(Version.Minor).$(Version.Patch)'
 

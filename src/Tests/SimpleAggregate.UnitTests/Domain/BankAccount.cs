@@ -6,14 +6,13 @@
     public class BankAccount : Aggregate,
         IHandle<AccountCredited>,
         IHandle<AccountDebited>
-
     {
         public string AccountReference => AggregateId;
         public decimal Balance { get; private set; }
 
-        public BankAccount(string bankAccountReference) 
-            : base(bankAccountReference)
+        public BankAccount(string bankAccountReference, bool ignoreUnregisteredEvents = false) : base(bankAccountReference)
         {
+            IgnoreUnregisteredEvents = ignoreUnregisteredEvents;
         }
 
         public async Task CreditAccount(decimal amount)

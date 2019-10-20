@@ -4,7 +4,7 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    public class AggregateProcessor : IAggregateProcessor
+    public class AggregateProcessor
     {
         private readonly IEventStore _eventStore;
 
@@ -13,27 +13,27 @@
             _eventStore = eventStore;
         }
 
-        public async Task Process<T>(T aggregate, Action<T> action) where T : IAggregate
+        public async Task ProcessAsync<T>(T aggregate, Action<T> action) where T : IAggregate
         {
-            await Load(aggregate);
+            await LoadAsync(aggregate);
             action?.Invoke(aggregate);
-            await Save(aggregate);
+            await SaveAsync(aggregate);
         }
 
-        private async Task Load<T>(T aggregate) where T : IAggregate
+        private async Task LoadAsync<T>(T aggregate) where T : IAggregate
         {
-            var events = await _eventStore.LoadEvents(aggregate.AggregateId);
+            var events = await _eventStore.LoadAsync(aggregate.AggregateId);
             if (events != null)
             {
                 aggregate.Rehydrate(events);
             }
         }
 
-        private async Task Save<T>(T aggregate) where T : IAggregate
+        private async Task SaveAsync<T>(T aggregate) where T : IAggregate
         {
             if (aggregate.UncommittedEvents.Any())
             {
-                await _eventStore.SaveEvents(aggregate.AggregateId, aggregate.UncommittedEvents);
+                await _eventStore.SaveAsync(aggregate.AggregateId, aggregate.UncommittedEvents);
             }
         }
     }

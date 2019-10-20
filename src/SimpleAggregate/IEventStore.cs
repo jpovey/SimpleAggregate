@@ -5,7 +5,7 @@
 
     public interface IEventStore
     {
-        Task<IEnumerable<object>> LoadEvents(string aggregateId);
-        Task SaveEvents(string aggregateId, IEnumerable<object> events);
+        Task<IEnumerable<object>> LoadAsync(string aggregateId);
+        Task SaveAsync(string aggregateId, IEnumerable<object> events);
     }
 }
