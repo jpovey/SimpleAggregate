@@ -81,7 +81,7 @@ public BankAccount(string bankAccountReference) : base (bankAccountReference)
 ### Aggregate Processor
 The aggregate processor allows users to rehydrate, command an action to be performed and commit new events against an aggregate.
 
-The `AggregateProcessor` requires an instance of `IEventStore` which should be used to wrap the event store data access implementation.
+The `AggregateProcessor` requires an instance of `IEventSource` which should be used to wrap the data access implementation of your desired event source.
 
 This class could be used in a command handler to perform some business logic against an aggregate.
 

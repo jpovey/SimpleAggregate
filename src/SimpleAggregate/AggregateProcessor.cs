@@ -6,23 +6,23 @@
 
     public class AggregateProcessor
     {
-        private readonly IEventStore _eventStore;
+        private readonly IEventSource _eventSource;
 
-        public AggregateProcessor(IEventStore eventStore)
+        public AggregateProcessor(IEventSource eventSource)
         {
-            _eventStore = eventStore;
+            _eventSource = eventSource;
         }
 
-        public async Task ProcessAsync<T>(T aggregate, Action<T> action) where T : IAggregate
+        public async Task ProcessAsync<T>(T aggregate, Action<T> aggregateAction) where T : IAggregate
         {
             await LoadAsync(aggregate);
-            action?.Invoke(aggregate);
+            aggregateAction?.Invoke(aggregate);
             await SaveAsync(aggregate);
         }
 
         private async Task LoadAsync<T>(T aggregate) where T : IAggregate
         {
-            var events = await _eventStore.LoadAsync(aggregate.AggregateId);
+            var events = await _eventSource.LoadEventsAsync(aggregate.AggregateId);
             if (events != null)
             {
                 aggregate.Rehydrate(events);
@@ -33,7 +33,7 @@
         {
             if (aggregate.UncommittedEvents.Any())
             {
-                await _eventStore.SaveAsync(aggregate.AggregateId, aggregate.UncommittedEvents);
+                await _eventSource.SaveEventsAsync(aggregate.AggregateId, aggregate.UncommittedEvents, aggregate.CommittedEvents.Count);
             }
         }
     }

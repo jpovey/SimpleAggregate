@@ -7,6 +7,7 @@
     {
         string AggregateId { get; }
         ReadOnlyCollection<object> UncommittedEvents { get; }
+        ReadOnlyCollection<object> CommittedEvents { get; }
         void Rehydrate(IEnumerable<dynamic> events);
     }
 }
