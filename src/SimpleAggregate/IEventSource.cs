@@ -5,7 +5,7 @@
 
     public interface IEventSource
     {
-        Task<IEnumerable<object>> LoadEventsAsync(string aggregateId);
-        Task SaveEventsAsync(string aggregateId, IEnumerable<object> events, int expectedEventCount);
+        Task<EventSourceResult> LoadEventsAsync(string aggregateId);
+        Task SaveEventsAsync(string aggregateId, IEnumerable<object> events, object concurrencyKey);
     }
 }

@@ -10,7 +10,11 @@
         public string AccountReference => AggregateId;
         public decimal Balance { get; private set; }
 
-        public BankAccount(string bankAccountReference, bool ignoreUnregisteredEvents = false) : base(bankAccountReference)
+        public BankAccount(string bankAccountReference) : base(bankAccountReference)
+        {
+        }
+
+        public BankAccount(string bankAccountReference, bool ignoreUnregisteredEvents) : base(bankAccountReference)
         {
             IgnoreUnregisteredEvents = ignoreUnregisteredEvents;
         }

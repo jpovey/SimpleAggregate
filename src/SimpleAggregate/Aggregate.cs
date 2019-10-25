@@ -10,7 +10,7 @@
         public ReadOnlyCollection<object> UncommittedEvents => _uncommittedEvents.AsReadOnly();
         public ReadOnlyCollection<object> CommittedEvents => _committedEvents.AsReadOnly();
         public string AggregateId { get; }
-        public bool IgnoreUnregisteredEvents { get; protected set; }
+        public bool IgnoreUnregisteredEvents { get; protected set; } = true;
         private readonly List<object> _uncommittedEvents = new List<object>();
         private List<dynamic> _committedEvents = new List<dynamic>();
 
@@ -35,7 +35,6 @@
                 throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}'");
 
             handler?.Handle(@event);
-            
         }
 
         public void Rehydrate(IEnumerable<dynamic> events)

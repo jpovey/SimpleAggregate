@@ -15,25 +15,27 @@
 
         public async Task ProcessAsync<T>(T aggregate, Action<T> aggregateAction) where T : IAggregate
         {
-            await LoadAsync(aggregate);
+            var concurrencyKey = await LoadAsync(aggregate);
             aggregateAction?.Invoke(aggregate);
-            await SaveAsync(aggregate);
+            await SaveAsync(aggregate, concurrencyKey);
         }
 
-        private async Task LoadAsync<T>(T aggregate) where T : IAggregate
+        private async Task<object> LoadAsync<T>(T aggregate) where T : IAggregate
         {
-            var events = await _eventSource.LoadEventsAsync(aggregate.AggregateId);
-            if (events != null)
+            var eventSourceResult = await _eventSource.LoadEventsAsync(aggregate.AggregateId);
+            if (eventSourceResult.Events != null)
             {
-                aggregate.Rehydrate(events);
+                aggregate.Rehydrate(eventSourceResult.Events);
             }
+
+            return eventSourceResult.ConcurrencyKey;
         }
 
-        private async Task SaveAsync<T>(T aggregate) where T : IAggregate
+        private async Task SaveAsync<T>(T aggregate, object concurrencyKey) where T : IAggregate
         {
             if (aggregate.UncommittedEvents.Any())
             {
-                await _eventSource.SaveEventsAsync(aggregate.AggregateId, aggregate.UncommittedEvents, aggregate.CommittedEvents.Count);
+                await _eventSource.SaveEventsAsync(aggregate.AggregateId, aggregate.UncommittedEvents, concurrencyKey);
             }
         }
     }

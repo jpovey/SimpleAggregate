@@ -122,7 +122,8 @@
         [Test]
         public void ThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsIsFalse()
         {
-            _sut = new BankAccount(_accountReference);
+            const bool ignoreUnregisteredEvents = false;
+            _sut = new BankAccount(_accountReference, ignoreUnregisteredEvents);
 
             var events = new List<object>
             {
@@ -132,6 +133,21 @@
             Action act = () => _sut.Rehydrate(events);
 
             act.Should().Throw<UnregisteredEventException>();
+        }
+
+        [Test]
+        public void NotThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsIsSetAsDefault()
+        {
+            _sut = new BankAccount(_accountReference);
+
+            var events = new List<object>
+            {
+                new UnregisteredEvent()
+            };
+
+            Action act = () => _sut.Rehydrate(events);
+
+            act.Should().NotThrow<UnregisteredEventException>();
         }
 
         [Test]

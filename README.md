@@ -66,15 +66,15 @@ account.CreditAccount(100);
 
 **Ignore Unregistered Events**
 
-By default the aggregate requires **all** events to be registered otherwise an exception will be thrown. But, based on the architecture of a system some services may require events to be ignored. To prevent unregistered events from being applied set `IgnoreUnregisteredEvents` to `true` when setting up the aggregate.
+By default the aggregate will ignore events which have not been registered. But, based on the architecture of your system some services may require all events to be handled. To ensure all events are registered set `IgnoreUnregisteredEvents` to `false` when setting up the aggregate, this will cause an exception to be thrown when handing an unexpected event.
 
-- If set to `true` unregistered events will be ignored. 
-- If set to `false` or default unregistered events will throw an `UnregisteredEventException`.
+- If set to `true` or default unregistered events will be ignored. 
+- If set to `false` unregistered events will throw an `UnregisteredEventException`.
 
 ```c#
 public BankAccount(string bankAccountReference) : base (bankAccountReference)
 {
-    IgnoreUnregisteredEvents = true;
+    IgnoreUnregisteredEvents = false;
 }
 ```
 
@@ -104,6 +104,13 @@ public class CreditAccountHandler
 }
 
 ```
+
+### Event Source
+The `IEventSource` interfaces provides an abstraction to allow the `AggregateProcessor` to integrate with multiple types of database. When implementing your own processor a concrete IEventSource implementation should be used to wrap the data access layer of your event source/store.
+
+**Concurrency**
+
+To maintain a consistent state in the event store the `AggregateProcessor` uses a concurrency key when saving uncommitted events. This value must be returned from the `LoadEventsAsync` as part of the `EventSourceResult` which is turn used by `SaveEventsAsync`. Different database implementations use different types of concurrency key so use one which matches your database schema.
 
 ## Build and publish
 #### Pipelines

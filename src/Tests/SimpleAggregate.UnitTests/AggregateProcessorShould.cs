@@ -16,56 +16,82 @@
         private readonly Fixture _fixture = new Fixture();
         private Mock<IEventSource> _eventSourceMock;
         private string _aggregateId;
+        private string _concurrencyKey;
         private decimal _creditAmount;
         private BankAccount _aggregate;
         private AggregateProcessor _sut;
+        private EventSourceResult _eventSourceResult;
 
         [SetUp]
         public void Setup()
         {
             _aggregateId = _fixture.Create<string>();
+            _concurrencyKey = _fixture.Create<string>();
             _creditAmount = _fixture.Create<decimal>();
             _aggregate = new BankAccount(_aggregateId);
 
             _eventSourceMock = new Mock<IEventSource>();
-            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(default(IEnumerable<object>));
+            var events = new List<object> { new AccountCredited { Amount = _creditAmount } };
+            _eventSourceResult = new EventSourceResult(events, _concurrencyKey);
+            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(_eventSourceResult);
+
             _sut = new AggregateProcessor(_eventSourceMock.Object);
         }
 
         [Test]
-        public async Task NotRehydrateAggregateUsingLoadedEvents_GivenEventsDoNotExist()
+        public async Task LoadEvents()
         {
             await _sut.ProcessAsync(_aggregate, null);
 
             _eventSourceMock.Verify(x => x.LoadEventsAsync(_aggregateId), Times.Once);
-            _aggregate.Balance.Should().Be(default(decimal));
         }
 
         [Test]
-        public async Task HydrateAggregateUsingLoadedEvents_GivenEventsExist()
+        public async Task NotRehydrateAggregateUsingLoadedEvents_GivenEventListIsNull()
         {
-            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(new List<object>
-            {
-                new AccountCredited { Amount = _creditAmount}
-            });
+            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(new EventSourceResult(default(IEnumerable<object>), _concurrencyKey));
 
-            await _sut.ProcessAsync(_aggregate, null);
-
-            _eventSourceMock.Verify(x => x.LoadEventsAsync(_aggregateId), Times.Once);
-            _aggregate.Balance.Should().Be(_creditAmount);
-        }
-
-        [Test]
-        public async Task CallAggregateAction()
-        {
             await _sut.ProcessAsync(_aggregate, async bankAccount => await bankAccount.CreditAccount(_creditAmount));
 
             _aggregate.Balance.Should().Be(_creditAmount);
         }
 
         [Test]
+        public async Task NotRehydrateAggregateUsingLoadedEvents_GivenEventsListIsEmpty()
+        {
+            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(new EventSourceResult(new List<object>(), _concurrencyKey));
+
+            await _sut.ProcessAsync(_aggregate, async bankAccount => await bankAccount.CreditAccount(_creditAmount));
+
+            _aggregate.Balance.Should().Be(_creditAmount);
+        }
+
+        [Test]
+        public async Task HydrateAggregateUsingLoadedEvents_GivenEventsExist()
+        {
+            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(_eventSourceResult);
+
+            await _sut.ProcessAsync(_aggregate, null);
+
+            _aggregate.Balance.Should().Be(_creditAmount);
+        }
+
+        [Test]
+        public async Task CallAggregateAction()
+        {
+            var newCreditAmount = _fixture.Create<decimal>();
+            var expectedCreditAccount = newCreditAmount + _creditAmount;
+
+            await _sut.ProcessAsync(_aggregate, async bankAccount => await bankAccount.CreditAccount(newCreditAmount));
+
+            _aggregate.Balance.Should().Be(expectedCreditAccount);
+        }
+
+        [Test]
         public void NotThrowException_GivenActionIsNull()
         {
+            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(new EventSourceResult(default(IEnumerable<object>), _concurrencyKey));
+
             Func<Task> act = async () => await _sut.ProcessAsync(_aggregate, null);
 
             act.Should().NotThrow<Exception>();
@@ -83,7 +109,7 @@
 
             await _sut.ProcessAsync(_aggregate, async bankAccount => await bankAccount.CreditAccount(_creditAmount));
 
-            _eventSourceMock.Verify(x => x.SaveEventsAsync(_aggregateId, It.Is<IEnumerable<object>>(y => VerifyUncommittedEvents(y, expectedEvents)), 0), Times.Once);
+            _eventSourceMock.Verify(x => x.SaveEventsAsync(_aggregateId, It.Is<IEnumerable<object>>(y => VerifyUncommittedEvents(y, expectedEvents)), It.IsAny<object>()), Times.Once);
         }
 
         [Test]
@@ -95,16 +121,11 @@
         }
 
         [Test]
-        public async Task SetExpectedEventCountEqualToCommittedEventCount_WhenSavingUncommittedEvents()
+        public async Task SaveEventsUsingConcurrencyKey()
         {
-            var rnd = new Random();
-            var expectedEventCount = rnd.Next(1, 10);
-            var committedEvents = _fixture.CreateMany<AccountCredited>(expectedEventCount).ToList();
-            _eventSourceMock.Setup(x => x.LoadEventsAsync(_aggregateId)).ReturnsAsync(committedEvents);
-
             await _sut.ProcessAsync(_aggregate, async bankAccount => await bankAccount.CreditAccount(_creditAmount));
 
-            _eventSourceMock.Verify(x => x.SaveEventsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<object>>(), expectedEventCount), Times.Once);
+            _eventSourceMock.Verify(x => x.SaveEventsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<object>>(), _eventSourceResult.ConcurrencyKey), Times.Once);
         }
 
         private static bool VerifyUncommittedEvents(IEnumerable<object> events, IEnumerable<object> expectedEvents)
