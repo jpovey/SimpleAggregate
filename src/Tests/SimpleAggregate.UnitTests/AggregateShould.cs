@@ -39,7 +39,7 @@
         {
             _sut = new BankAccount(_accountReference);
 
-            _sut.AccountReference.Should().Be(_accountReference);
+            _sut.AggregateId.Should().Be(_accountReference);
         }
 
         [Test]

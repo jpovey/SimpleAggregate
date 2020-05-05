@@ -7,14 +7,13 @@
         IHandle<AccountCredited>,
         IHandle<AccountDebited>
     {
-        public string AccountReference => AggregateId;
         public decimal Balance { get; private set; }
 
-        public BankAccount(string bankAccountReference) : base(bankAccountReference)
+        public BankAccount(string aggregateId) : base(aggregateId)
         {
         }
 
-        public BankAccount(string bankAccountReference, bool ignoreUnregisteredEvents) : base(bankAccountReference)
+        public BankAccount(string aggregateId, bool ignoreUnregisteredEvents) : base(aggregateId)
         {
             IgnoreUnregisteredEvents = ignoreUnregisteredEvents;
         }

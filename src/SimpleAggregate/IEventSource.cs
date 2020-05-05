@@ -6,7 +6,7 @@
 
     public interface IEventSource
     {
-        Task<EventSourceResult> LoadEventsAsync(string aggregateId, CancellationToken cancellationToken = default);
-        Task SaveEventsAsync(string aggregateId, IEnumerable<object> events, object concurrencyKey, CancellationToken cancellationToken = default);
+        Task<EventSourceResult> ReadEventsAsync(string aggregateId, CancellationToken cancellationToken = default);
+        Task CommitEventsAsync(string aggregateId, IEnumerable<object> events, object concurrencyKey, CancellationToken cancellationToken = default);
     }
 }
