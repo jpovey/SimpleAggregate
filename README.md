@@ -19,14 +19,16 @@ Install-Package SimpleAggregate
 
 Create an aggregate by defining an instance which inherits from the `Aggregate` base class. Once created, aggregates can be rehydrated by applying events from history or updated by applying new events.
 
-1. Create an aggregate which inherits from `Aggregate`
+1. Define an aggregate which inherits from `Aggregate`
 2. Configure constructor to set AggregateId base property
 3. Register event handlers
 4. Implement event handlers
+5. Declare aggregate commands
 
 ```c#
 public class BankAccount : Aggregate, //Step 1 
-    IHandle<AccountCredited> //Step 3
+    IHandle<AccountCredited>, //Step 3
+    IHandle<AccountDebited> 
 {
     public decimal Balance { get; private set; }
 
@@ -35,42 +37,56 @@ public class BankAccount : Aggregate, //Step 1
     {
     }
 
+    // Step 5
     public async Task CreditAccount(decimal amount)
     {
         this.Apply(new AccountCredited { Amount = amount });
     }
 
-    // Step 4
-    void IHandle<AccountCredited>.Handle(AccountCredited priceUpdated)
+    public async Task DebitAccount(decimal amount)
     {
-        Balance += priceUpdated.Amount;
+        this.Apply(new AccountDebited { Amount = amount });
+    }
+
+    // Step 4
+    void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
+    {
+        Balance += accountCredited.Amount;
+    }
+
+    void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
+    {
+        Balance -= accountDebited.Amount;
     }
 }
 
 ```
 
-5. Declare a new instance of the aggregate
+6. Declare a new instance of the aggregate
 ```c#
-// Step 5
+// Step 6
 var accountReference = "REF123";
 var account = new BankAccount(accountReference);
 ```
 
-6. Hydrate the aggregate using existing events
+7. Hydrate the aggregate using existing events
 ```c#
-// Step 6
+// Step 7
 var events = new List<object>
 {
-    new AccountCredited { Amount = 50 }
+    new AccountCredited { Amount = 50 },
+    new AccountDebited { Amount = 25 }
+    new AccountCredited { Amount = 5 },
 };
 
 account.Rehydrate(events);
 ```
 
-7. Or invoke a command
+8. Or invoke commands
 ```c#
-// Step 7
+// Step 8
 account.CreditAccount(100);
+account.DebitAccount(15);
 ```
 
 ### Aggregate Settings

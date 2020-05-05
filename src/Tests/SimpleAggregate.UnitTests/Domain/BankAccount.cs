@@ -39,9 +39,9 @@
             this.Apply<AccountCredited>(null);
         }
 
-        void IHandle<AccountCredited>.Handle(AccountCredited priceUpdated)
+        void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
         {
-            Balance += priceUpdated.Amount;
+            Balance += accountCredited.Amount;
         }
 
         void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
