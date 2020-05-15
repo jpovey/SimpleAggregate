@@ -49,12 +49,12 @@ public class BankAccount : Aggregate, //Step 1
     }
 
     // Step 4
-    void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
+    public void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
     {
         Balance += accountCredited.Amount;
     }
 
-    void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
+    public void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
     {
         Balance -= accountDebited.Amount;
     }
@@ -135,7 +135,7 @@ public class CreditAccountHandler
 
         //Process aggregate
         return _processor.ProcessAsync(bankAccount, 
-            account => account.CreditAccount(command.Amount));
+            x => x.CreditAccount(command.Amount));
     }
 }
 

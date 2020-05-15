@@ -14,7 +14,7 @@
         private readonly List<object> _uncommittedEvents = new List<object>();
         private List<dynamic> _committedEvents = new List<dynamic>();
 
-        protected Aggregate(string aggregateId)
+        public Aggregate(string aggregateId)
         {
             AggregateId = aggregateId ?? throw new ArgumentNullException(nameof(aggregateId), "AggregateId must not be null");
         }
