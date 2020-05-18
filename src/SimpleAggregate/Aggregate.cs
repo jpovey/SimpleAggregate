@@ -29,17 +29,19 @@
         {
             if (@event == null) throw new ArgumentNullException(nameof(@event), "The event to be applied is null");
 
-            var handler = this as IHandle<TEvent>;
-
-            if (!IgnoreUnregisteredEvents && handler == null)
+            if (this is IHandle<TEvent> aggregate)
+            {
+                aggregate.Handle(@event);
+                return;
+            } 
+            
+            if (!IgnoreUnregisteredEvents) 
                 throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}'");
-
-            handler?.Handle(@event);
         }
 
         public void Rehydrate(IEnumerable<dynamic> events)
         {
-             _committedEvents = events.ToList();
+            _committedEvents = events.ToList();
             foreach (var @event in _committedEvents) ApplyInternal(@event);
         }
 
