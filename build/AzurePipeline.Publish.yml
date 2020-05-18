@@ -19,15 +19,18 @@ variables:
 
 steps:
   - bash: echo "##vso[build.updatebuildnumber]Release $(Release.Number)"
-    name: SetReleaseBuildName
+    displayName: Set Release Build Name
 
   - task: NuGetToolInstaller@1
+    displayName: Install nuget
 
   - task: NuGetCommand@2
+    displayName: Restore nuget packages
     inputs:
       restoreSolution: "$(solution)"
 
   - task: VSBuild@1
+    displayName: Build solution
     inputs:
       solution: "$(solution)"
       msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
@@ -35,11 +38,13 @@ steps:
       configuration: "$(buildConfiguration)"
 
   - task: VSTest@2
+    displayName: Run tests
     inputs:
       platform: "$(buildPlatform)"
       configuration: "$(buildConfiguration)"
 
   - task: NuGetCommand@2
+    displayName: Nuget pack
     inputs:
       command: "pack"
       packagesToPack: "**/*SimpleAggregate.csproj"
@@ -47,6 +52,7 @@ steps:
       versionEnvVar: "Release.Number"
 
   - task: NuGetCommand@2
+    displayName: Nuget push
     inputs:
       command: "push"
       packagesToPush: "$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg"

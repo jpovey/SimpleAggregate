@@ -4,46 +4,50 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+  - master
 
 pr:
-- master
+  - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: "windows-latest"
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  Release.Counter: '0'
-  BuildNumber:  $[counter(variables['Release.Counter'], 1)]
+  solution: "**/*.sln"
+  buildPlatform: "Any CPU"
+  buildConfiguration: "Release"
+  Release.Counter: "0"
+  BuildNumber: $[counter(variables['Release.Counter'], 1)]
   PullRequestNumber: $(System.PullRequest.PullRequestNumber)
 
 steps:
-- bash: |
-    if [ -z "$(PullRequestNumber)" ]
-    then
-      echo "##vso[build.updatebuildnumber]Build-$(BuildNumber) $(Build.SourceBranchName)"
-    else
-      echo "##vso[build.updatebuildnumber]Build-$(BuildNumber) PullRequest-$(System.PullRequest.PullRequestNumber)"
-    fi
-  name: SetReleaseBuildName
+  - bash: |
+      if [ -z "$(PullRequestNumber)" ]
+      then
+        echo "##vso[build.updatebuildnumber]Build-$(BuildNumber) $(Build.SourceBranchName)"
+      else
+        echo "##vso[build.updatebuildnumber]Build-$(BuildNumber) PullRequest-$(System.PullRequest.PullRequestNumber)"
+      fi
+    displayName: SetReleaseBuildName
 
-- task: NuGetToolInstaller@1
+  - task: NuGetToolInstaller@1
+    displayName: Install nuget
 
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
+  - task: NuGetCommand@2
+    displayName: Restore nuget packages
+    inputs:
+      restoreSolution: "$(solution)"
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: VSBuild@1
+    displayName: Build solution
+    inputs:
+      solution: "$(solution)"
+      msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+      platform: "$(buildPlatform)"
+      configuration: "$(buildConfiguration)"
 
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+  - task: VSTest@2
+    displayName: Run tests
+    inputs:
+      platform: "$(buildPlatform)"
+      configuration: "$(buildConfiguration)"
