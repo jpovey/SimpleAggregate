@@ -75,7 +75,7 @@ var account = new BankAccount(accountReference);
 var events = new List<object>
 {
     new AccountCredited { Amount = 50 },
-    new AccountDebited { Amount = 25 }
+    new AccountDebited { Amount = 25 },
     new AccountCredited { Amount = 5 },
 };
 
