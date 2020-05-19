@@ -15,7 +15,7 @@ variables:
   Version.Major: "0"
   Version.Minor: "10"
   Version.Seed: "$(Version.Major).$(Version.Minor)"
-  Version.Patch: $[variables['Version.Seed'], 0)]
+  Version.Patch: $[counter(variables['Version.Seed'], 0)]
   Release.Number: "$(Version.Major).$(Version.Minor).$(Version.Patch)"
 
 steps:
