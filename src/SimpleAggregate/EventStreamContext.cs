@@ -2,12 +2,12 @@
 {
     using System.Collections.Generic;
 
-    public class EventSourceResult
+    public class EventStreamContext
     {
         public readonly IEnumerable<object> Events;
         public readonly object ConcurrencyKey;
 
-        public EventSourceResult(IEnumerable<object> events, object concurrencyKey)
+        public EventStreamContext(IEnumerable<object> events, object concurrencyKey)
         {
             Events = events;
             ConcurrencyKey = concurrencyKey;

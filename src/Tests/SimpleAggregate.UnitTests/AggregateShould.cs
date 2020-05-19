@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Threading.Tasks;
     using AutoFixture;
     using Domain;
     using Domain.Events;
@@ -14,55 +13,29 @@
     public class AggregateShould
     {
         private readonly Fixture _fixture = new Fixture();
-        private string _accountReference;
         private BankAccount _sut;
         private decimal _creditAmount;
 
         [SetUp]
         public void Setup()
         {
-            _accountReference = _fixture.Create<string>();
             _creditAmount = _fixture.Create<decimal>();
-            _sut = new BankAccount(_accountReference);
+            _sut = new BankAccount();
         }
 
         [Test]
-        public void SetAggregateId_WhenCreatingNewAggregate()
+        public void AddEventToUncommittedEvents_WhenApplyingEvent()
         {
-            _sut = new BankAccount(_accountReference);
-
-            _sut.AggregateId.Should().Be(_accountReference);
-        }
-
-        [Test]
-        public void ReturnAggregateId_WhenAccessingBankAccountReference()
-        {
-            _sut = new BankAccount(_accountReference);
-
-            _sut.AggregateId.Should().Be(_accountReference);
-        }
-
-        [Test]
-        public void ThrowArgumentNullException_WhenCreatingTheAggregate_GivenTheAggregateIdIsNull()
-        {
-            Action act = () => _sut = new BankAccount(null);
-
-            act.Should().Throw<ArgumentNullException>();
-        }
-
-        [Test]
-        public async Task AddEventToUncommittedEvents_WhenApplyingEvent()
-        {
-            await _sut.CreditAccount(_creditAmount);
+            _sut.CreditAccount(_creditAmount);
 
             _sut.UncommittedEvents.Count.Should().Be(1);
             _sut.UncommittedEvents.First().Should().BeEquivalentTo(new AccountCredited { Amount = _creditAmount });
         }
 
         [Test]
-        public async Task ClearUncommittedEvents()
+        public void ClearUncommittedEvents()
         {
-            await _sut.CreditAccount(_creditAmount);
+            _sut.CreditAccount(_creditAmount);
 
             _sut.ClearUncommittedEvents();
 
@@ -70,9 +43,9 @@
         }
 
         [Test]
-        public async Task ApplyEvent()
+        public void ApplyEvent()
         {
-            await _sut.CreditAccount(_creditAmount);
+            _sut.CreditAccount(_creditAmount);
 
             _sut.Balance.Should().Be(_creditAmount);
         }
@@ -91,7 +64,7 @@
         }
 
         [Test]
-        public void NotAddHydratedEventsToUncommittedEvents_WhenHydratingAggregate()
+        public void NotAddLoadedEventsToUncommittedEvents_WhenHydratingAggregate()
         {
             var events = new List<object>
             {
@@ -104,10 +77,9 @@
         }
 
         [Test]
-        public void NotThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsIsTrue()
+        public void NotThrowException_WhenRehydratingAggregateWithUnregisteredEvent_GivenUnregisteredEventsAreNotForbidden()
         {
-            const bool ignoreUnregisteredEvents = true;
-            _sut = new BankAccount(_accountReference, ignoreUnregisteredEvents);
+            _sut = new BankAccount();
 
             var events = new List<object>
             {
@@ -120,10 +92,10 @@
         }
 
         [Test]
-        public void ThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsIsFalse()
+        public void ThrowException_WhenRehydratingAggregateWithUnregisteredEvent_GivenUnregisteredEventsAreForbidden()
         {
-            const bool ignoreUnregisteredEvents = false;
-            _sut = new BankAccount(_accountReference, ignoreUnregisteredEvents);
+            const bool forbidUnregisteredEvents = true;
+            _sut = new BankAccount(forbidUnregisteredEvents);
 
             var events = new List<object>
             {
@@ -136,10 +108,10 @@
         }
 
         [Test]
-        public void NotThrowException_WhenApplyingEvent_GivenIgnoreUnregisteredEventsIsFalse()
+        public void NotThrowException_WhenRehydratingAggregateWithRegisteredEvent_GivenUnregisteredEventsAreForbidden()
         {
-            const bool ignoreUnregisteredEvents = false;
-            _sut = new BankAccount(_accountReference, ignoreUnregisteredEvents);
+            const bool forbidUnregisteredEvents = true;
+            _sut = new BankAccount(forbidUnregisteredEvents);
 
             var events = new List<object>
             {
@@ -152,9 +124,9 @@
         }
 
         [Test]
-        public void NotThrowException_WhenApplyingUnregisteredEvent_GivenIgnoreUnregisteredEventsIsSetAsDefault()
+        public void NotThrowException_WhenRehydratingAggregateWithRegisteredEvent_GivenForbidUnregisteredEventsIsSetAsDefault()
         {
-            _sut = new BankAccount(_accountReference);
+            _sut = new BankAccount();
 
             var events = new List<object>
             {
@@ -167,7 +139,7 @@
         }
 
         [Test]
-        public void ThrowArgumentNullException_WhenApplyingNullEvent()
+        public void ThrowArgumentNullException_WhenTryingToApplyNull()
         {
             Action act = () => _sut.ApplyNullEvent();
 
@@ -190,7 +162,7 @@
         }
 
         [Test]
-        public async Task PerformCommand_GivenAggregateHasBeenHydrated()
+        public void PerformCommand_GivenAggregateHasBeenHydrated()
         {
             var events = new List<object>
             {
@@ -200,7 +172,7 @@
 
             _sut.Rehydrate(events);
 
-            await _sut.CreditAccount(20);
+            _sut.CreditAccount(20);
 
             _sut.Balance.Should().Be(60);
             _sut.UncommittedEvents.Count.Should().Be(1);
@@ -216,8 +188,19 @@
             };
 
             _sut.Rehydrate(events);
-
             _sut.CommittedEvents.Should().BeEquivalentTo(events);
+        }
+
+
+        [Test]
+        public void ApplyEvent_WhenCreatingAggregate()
+        {
+            var accountId = _fixture.Create<string>();
+
+            _sut = new BankAccount(accountId);
+
+            _sut.UncommittedEvents.Count.Should().Be(1);
+            _sut.UncommittedEvents.First().GetType().Should().Be(typeof(AccountCreated));
         }
     }
 }

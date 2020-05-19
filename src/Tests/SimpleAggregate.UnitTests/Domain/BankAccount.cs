@@ -1,37 +1,37 @@
 ﻿namespace SimpleAggregate.UnitTests.Domain
 {
-    using System.Threading.Tasks;
     using Events;
-    
+
     public class BankAccount : Aggregate,
+        IHandle<AccountCreated>,
         IHandle<AccountCredited>,
         IHandle<AccountDebited>
     {
         public decimal Balance { get; private set; }
 
-        public BankAccount(string aggregateId) : base(aggregateId)
+        public BankAccount()
         {
+            ForbidUnregisteredEvents = false;
         }
 
-        public BankAccount(string aggregateId, bool ignoreUnregisteredEvents) : base(aggregateId)
+        public BankAccount(string accountId)
         {
-            IgnoreUnregisteredEvents = ignoreUnregisteredEvents;
+            this.Apply(new AccountCreated { AccountId = accountId});
         }
 
-        public async Task CreditAccount(decimal amount)
+        public BankAccount(bool forbidUnregisteredEvents)
         {
-            await CallDummyApi();
+            ForbidUnregisteredEvents = forbidUnregisteredEvents;
+        }
+
+        public void CreditAccount(decimal amount)
+        {
             this.Apply(new AccountCredited { Amount = amount });
         }
 
-        public void DoNothing()
+        public void DebitAccount(decimal amount)
         {
-
-        }
-
-        private static Task CallDummyApi()
-        {
-            return Task.CompletedTask;
+            this.Apply(new AccountDebited { Amount = amount });
         }
 
         public void ApplyNullEvent()
@@ -39,12 +39,17 @@
             this.Apply<AccountCredited>(null);
         }
 
-        void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
+        public void Handle(AccountCreated accountCreated)
+        {
+            AggregateId = accountCreated.AccountId;
+        }
+
+        public void Handle(AccountCredited accountCredited)
         {
             Balance += accountCredited.Amount;
         }
 
-        void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
+        public void Handle(AccountDebited accountDebited)
         {
             Balance -= accountDebited.Amount;
         }

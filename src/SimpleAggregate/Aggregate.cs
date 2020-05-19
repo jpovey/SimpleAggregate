@@ -5,19 +5,15 @@
     using System.Collections.ObjectModel;
     using System.Linq;
 
-    public class Aggregate : IAggregate
+    public class Aggregate
     {
         public ReadOnlyCollection<object> UncommittedEvents => _uncommittedEvents.AsReadOnly();
         public ReadOnlyCollection<object> CommittedEvents => _committedEvents.AsReadOnly();
-        public string AggregateId { get; }
-        public bool IgnoreUnregisteredEvents { get; protected set; } = true;
+        public string AggregateId { get; protected set; }
+        public object ConcurrencyKey { get; set; }  
+        public bool ForbidUnregisteredEvents { get; protected set; } = false;
         private readonly List<object> _uncommittedEvents = new List<object>();
         private List<dynamic> _committedEvents = new List<dynamic>();
-
-        public Aggregate(string aggregateId)
-        {
-            AggregateId = aggregateId ?? throw new ArgumentNullException(nameof(aggregateId), "AggregateId must not be null");
-        }
 
         protected void Apply<TEvent>(TEvent @event)
         {
@@ -35,8 +31,8 @@
                 return;
             } 
             
-            if (!IgnoreUnregisteredEvents) 
-                throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}'");
+            if (ForbidUnregisteredEvents) 
+                throw new UnregisteredEventException($"The requested event '{@event.GetType().FullName}' is not registered in '{GetType().FullName}' and could not be applied");
         }
 
         public void Rehydrate(IEnumerable<dynamic> events)

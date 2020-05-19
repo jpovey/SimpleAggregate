@@ -2,42 +2,42 @@
 
 
 # SimpleAggregate
-A package to help simplify applying events to a DDD aggregate. 
+A package to help simplify applying events to a DDD aggregate from an event stream. 
 
 ## Features
 
 - A simple `Aggregate` base class used to rehydrate and apply events to an aggregate
-- An `AggregateProcessor` to manage aggregates in combination with an event source
+- An `AggregateProcessor` to manage aggregates in combination with an event stream
 
-## How to use
+# How to use
 
 ```
 Install-Package SimpleAggregate
 ```
 
-### Aggregate
+## Aggregate
 
 Create an aggregate by defining an instance which inherits from the `Aggregate` base class. Once created, aggregates can be rehydrated by applying events from history or updated by applying new events.
 
-1. Define an aggregate which inherits from `Aggregate`
-2. Configure constructor to set AggregateId base property
-3. Register event handlers
-4. Implement event handlers
-5. Declare aggregate commands
+1. Introduce an aggregate which inherits from the `Aggregate` base class
+2. Register event handlers
+3. Implement event handlers
+4. Define aggregate commands
 
 ```c#
 public class BankAccount : Aggregate, //Step 1 
-    IHandle<AccountCredited>, //Step 3
+    IHandle<AccountCreated>, //Step 2
+    IHandle<AccountCredited>, 
     IHandle<AccountDebited> 
 {
     public decimal Balance { get; private set; }
-
-    // Step 2
-    public BankAccount(string aggregateId) : base(aggregateId)
+  
+    // Step 5
+    public async Task CreateAccount(string accountId)
     {
+        this.Apply(new AccountCreated{ AccountId = accountId });
     }
 
-    // Step 5
     public async Task CreditAccount(decimal amount)
     {
         this.Apply(new AccountCredited { Amount = amount });
@@ -48,13 +48,18 @@ public class BankAccount : Aggregate, //Step 1
         this.Apply(new AccountDebited { Amount = amount });
     }
 
-    // Step 4
-    public void IHandle<AccountCredited>.Handle(AccountCredited accountCredited)
+    // Step 3
+    public void Handle(AccountCreated accountCreated)
+    {
+        AggregateId = accountCreated.AccountId;
+    }
+
+    public void Handle(AccountCredited accountCredited)
     {
         Balance += accountCredited.Amount;
     }
 
-    public void IHandle<AccountDebited>.Handle(AccountDebited accountDebited)
+    public void Handle(AccountDebited accountDebited)
     {
         Balance -= accountDebited.Amount;
     }
@@ -62,18 +67,18 @@ public class BankAccount : Aggregate, //Step 1
 
 ```
 
-6. Declare a new instance of the aggregate
+5. Create a new instance of the aggregate
 ```c#
 // Step 6
-var accountReference = "REF123";
-var account = new BankAccount(accountReference);
+var account = new BankAccount();
 ```
 
-7. Hydrate the aggregate using existing events
+6. Hydrate the aggregate using existing events
 ```c#
 // Step 7
 var events = new List<object>
 {
+    new AccountCreated{ AccountId = "Ref123" },
     new AccountCredited { Amount = 50 },
     new AccountDebited { Amount = 25 },
     new AccountCredited { Amount = 5 },
@@ -82,7 +87,7 @@ var events = new List<object>
 account.Rehydrate(events);
 ```
 
-8. Or invoke commands
+7. Or invoke commands
 ```c#
 // Step 8
 account.CreditAccount(100);
@@ -91,30 +96,32 @@ account.DebitAccount(15);
 
 ### Aggregate Settings
 
-**Ignore Unregistered Events**
+**Forbid Unregistered Events**
 
-By default the aggregate will ignore events which have not been registered. But, based on the architecture of your system some services may require all events to be handled. 
+By default the aggregate will ignore events which have not been registered. But, based on the architecture of your system some aggregates may require all events to be applied. 
 
-To ensure all events are registered set `IgnoreUnregisteredEvents` to `false` when setting up the aggregate, this will cause an exception to be thrown when handing an unexpected event.
+To force all events to be handled set `ForbidUnregisteredEvents` to `true` when defining up the aggregate, this will cause an exception to be thrown when handing an unexpected event.
 
-- If set to `true` or default unregistered events will be ignored. 
-- If set to `false` unregistered events will throw an `UnregisteredEventException`.
+- If set to `false` or default unregistered events will be ignored. 
+- If set to `true` unregistered events will throw an `UnregisteredEventException`.
 
 ```c#
-public BankAccount(string bankAccountReference) : base (bankAccountReference)
+public BankAccount()
 {
-    IgnoreUnregisteredEvents = false;
+    ForbidUnregisteredEvents = true;
 }
 ```
 
-### Aggregate Processor
-The aggregate processor can be used to orchestrate the flow of applying events to aggregates in combination with an event source.
+## Aggregate Processor
+The aggregate processor should be used to orchestrate the flow of commanding an aggregate. 
+
+The aggregate processor uses `IAggregateRepository` and in turn `IEventStream` to load and save existing aggregates.
 
 The `AggregateProcessor` once invoked will:
-- Read existing events from the event source
-- Rehydrate the aggregate
+- Use the aggregate repository to to read existing events from the event stream
+- Use the aggregate repository to rehydrate the aggregate using loaded events
 - Command an action to be executed against the aggregate
-- Commit new events to the event source
+- Use the aggregate repository to append new events to the event stream
 
 An example usage of the `AggregateProcessor` could be in a command handler to perform some business logic against an aggregate.
 
@@ -128,36 +135,39 @@ public class CreditAccountHandler
         _processor = processor;
     }
 
-    public Task Handle(CreditAccountCommand command)
+    public Task Handle(CreditAccount command)
     {
-        //Declare aggregate
-        var bankAccount = new BankAccount(command.AccountReference);
-
-        //Process aggregate
-        return _processor.ProcessAsync(bankAccount, 
-            x => x.CreditAccount(command.Amount));
+        var amount = ConvertAmountToGbpBusinessLogic(command);
+        return _processor.ProcessAsync(command.AccountReference, 
+            x => x.CreditAccount(amount));
     }
 }
 
 ```
 
-### Event Source
-The `IEventSource` interfaces provides an abstraction to allow the `AggregateProcessor` to integrate with multiple types of database.
+### Aggregate Repository and Event Stream
+The `AggregateProcessor` uses an `AggregateRepository` which requires an `IEventStream` to provide an abstraction between multiple types of databases which can be used to store events.
 
+If using aggregate processor then a custom `IEventStream` concrete implementation is required to wrap the data access layer of your desired event store.
 
- When implementing your own aggregate processor a concrete `IEventSource` implementation is required to wrap the data access layer of your desired event source/store.
+### Concurrency
 
-**Concurrency**
+To provide a consistent state in the event stream a reference to the `ConcurrencyKey` read from the `IEventStream` is stored against the aggregate when loaded from the aggregate repository. This concurrency key is then used when appending new events back to the stream.
 
-To provide a consistent state in the event store a concurrency key reference is maintained by the `AggregateProcessor` after reading the event stream. This concurrency key is then used when committing events,
+When implementing your own `IEventStream` this concurrency key, returned as part of the `EventStreamContext`, should be used to maintain database concurrency in your own system. Different database implementations use different types of concurrency key so use one which matches your database schema.
 
-When implementing your own `IEventSource` this concurrency key should be used to maintain database concurrency in your own system. Different database implementations use different types of concurrency key so use one which matches your database schema.
+### Dependency injection example setup
+```c#
+services.AddSingleton<AggregateProcessor<BankAccount>>();
+services.AddSingleton<IAggregateRepository<BankAccount>, AggregateRepository<BankAccount>>();
+services.AddSingleton<IEventStream, CustomEventStream>();
+```
 
-## Build and publish
-#### Pipelines
+# Build and publish
+### Pipelines
 Build pipelines are managed in Azure Devops
 - [Build and Test](https://jonpovey.visualstudio.com/SimpleAggregate/_build?definitionId=17)
 - [Publish](https://jonpovey.visualstudio.com/SimpleAggregate/_build?definitionId=16)
 
-#### Nuget package
+### Nuget package
 https://www.nuget.org/packages/SimpleAggregate/

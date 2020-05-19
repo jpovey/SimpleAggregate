@@ -1,43 +1,23 @@
 ﻿namespace SimpleAggregate
 {
     using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
-    public class AggregateProcessor
+    public class AggregateProcessor<TAggregate> where TAggregate : Aggregate, new()
     {
-        private readonly IEventSource _eventSource;
+        private readonly IAggregateRepository<TAggregate> _aggregateRepository;
 
-        public AggregateProcessor(IEventSource eventSource)
+        public AggregateProcessor(IAggregateRepository<TAggregate> aggregateRepository)
         {
-            _eventSource = eventSource;
+            _aggregateRepository = aggregateRepository;
         }
 
-        public async Task ProcessAsync<T>(T aggregate, Action<T> aggregateAction, CancellationToken cancellationToken = default) where T : IAggregate
+        public async Task ProcessAsync(string aggregateId, Action<TAggregate> command, CancellationToken cancellationToken = default)
         {
-            var concurrencyKey = await ReadAsync(aggregate, cancellationToken);
-            aggregateAction?.Invoke(aggregate);
-            await CommitAsync(aggregate, concurrencyKey, cancellationToken);
-        }
-
-        private async Task<object> ReadAsync<T>(T aggregate, CancellationToken cancellationToken = default) where T : IAggregate
-        {
-            var eventSourceResult = await _eventSource.ReadEventsAsync(aggregate.AggregateId, cancellationToken);
-            if (eventSourceResult.Events != null)
-            {
-                aggregate.Rehydrate(eventSourceResult.Events);
-            }
-
-            return eventSourceResult.ConcurrencyKey;
-        }
-
-        private async Task CommitAsync<T>(T aggregate, object concurrencyKey, CancellationToken cancellationToken = default) where T : IAggregate
-        {
-            if (aggregate.UncommittedEvents.Any())
-            {
-                await _eventSource.CommitEventsAsync(aggregate.AggregateId, aggregate.UncommittedEvents, concurrencyKey, cancellationToken);
-            }
+            var aggregate = await _aggregateRepository.GetAsync(aggregateId, cancellationToken);
+            command?.Invoke(aggregate);
+            await _aggregateRepository.SaveAsync(aggregate, cancellationToken);
         }
     }
 }
