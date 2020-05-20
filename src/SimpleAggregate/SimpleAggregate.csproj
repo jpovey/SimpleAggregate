@@ -5,8 +5,8 @@
     <PackageId>SimpleAggregate</PackageId>
     <Authors>Jonathan Povey</Authors>
     <Product>SimpleAggregate</Product>
-    <Description>Simple Aggregate. A package to help simplify applying events to a DDD aggregate.</Description>
-    <Summary>Simple Aggregate. A package to help simplify applying events to a DDD aggregate.</Summary>
+    <Description>Simple Aggregate. A lightweight package to help simplify handling commands and applying events to an aggregate.</Description>
+    <Summary>Simple Aggregate. A lightweight package to help simplify handling commands and applying events to an aggregate.</Summary>
     <Copyright>Copyright Jonathan Povey ©2019</Copyright>
     <PackageProjectUrl>https://github.com/jpovey/SimpleAggregate</PackageProjectUrl>
     <RepositoryUrl>https://github.com/jpovey/SimpleAggregate</RepositoryUrl>

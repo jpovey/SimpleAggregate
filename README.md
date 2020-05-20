@@ -2,12 +2,12 @@
 
 
 # SimpleAggregate
-A package to help simplify applying events to a DDD aggregate from an event stream. 
+A lightweight package to help simplify handling commands and applying events to an aggregate.
 
 ## Features
 
 - A simple `Aggregate` base class used to rehydrate and apply events to an aggregate
-- An `AggregateProcessor` to manage aggregates in combination with an event stream
+- An `AggregateProcessor` to manage an aggregate in combination with an event stream
 
 # How to use
 
@@ -113,7 +113,7 @@ public BankAccount()
 ```
 
 ## Aggregate Processor
-The aggregate processor should be used to orchestrate the flow of commanding an aggregate. 
+The aggregate processor should be used to orchestrate the flow of commanding an action to be performed against an aggregate. 
 
 The aggregate processor uses `IAggregateRepository` and in turn `IEventStream` to load and save existing aggregates.
 
@@ -148,7 +148,7 @@ public class CreditAccountHandler
 ### Aggregate Repository and Event Stream
 The `AggregateProcessor` uses an `AggregateRepository` which requires an `IEventStream` to provide an abstraction between multiple types of databases which can be used to store events.
 
-If using aggregate processor then a custom `IEventStream` concrete implementation is required to wrap the data access layer of your desired event store.
+If using the aggregate processor then a custom `IEventStream` concrete implementation is required to wrap the data access layer of your desired event store.
 
 ### Concurrency
 
