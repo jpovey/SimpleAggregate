@@ -32,7 +32,7 @@ public class BankAccount : Aggregate, //Step 1
 {
     public decimal Balance { get; private set; }
   
-    // Step 5
+    // Step 4
     public async Task CreateAccount(string accountId)
     {
         this.Apply(new AccountCreated{ AccountId = accountId });
@@ -69,16 +69,16 @@ public class BankAccount : Aggregate, //Step 1
 
 5. Create a new instance of the aggregate
 ```c#
-// Step 6
+// Step 5
 var account = new BankAccount();
 ```
 
 6. Hydrate the aggregate using existing events
 ```c#
-// Step 7
+// Step 6
 var events = new List<object>
 {
-    new AccountCreated{ AccountId = "Ref123" },
+    new AccountCreated { AccountId = "Ref123" },
     new AccountCredited { Amount = 50 },
     new AccountDebited { Amount = 25 },
     new AccountCredited { Amount = 5 },
@@ -87,9 +87,9 @@ var events = new List<object>
 account.Rehydrate(events);
 ```
 
-7. Or invoke commands
+7. Or invoke commands to apply new events
 ```c#
-// Step 8
+// Step 7
 account.CreditAccount(100);
 account.DebitAccount(15);
 ```
@@ -100,7 +100,7 @@ account.DebitAccount(15);
 
 By default the aggregate will ignore events which have not been registered. But, based on the architecture of your system some aggregates may require all events to be applied. 
 
-To force all events to be handled set `ForbidUnregisteredEvents` to `true` when defining up the aggregate, this will cause an exception to be thrown when handing an unexpected event.
+To force all events to be handled set `ForbidUnregisteredEvents` to `true` when defining the aggregate, this will cause an exception to be thrown when handing an unexpected event.
 
 - If set to `false` or default unregistered events will be ignored. 
 - If set to `true` unregistered events will throw an `UnregisteredEventException`.
